@@ -1,4 +1,4 @@
-/*! lozad.js - v1.10.0 - 2019-06-06
+/*! lozad.js - v1.10.0 - 2019-09-05
 * https://github.com/ApoorvSaxena/lozad.js
 * Copyright (c) 2019 Apoorv Saxena; Licensed MIT */
 
@@ -6,10 +6,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global.lozad = factory());
-}(this, (function () { 'use strict';
-
-  var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+  (global = global || self, global.lozad = factory());
+}(this, function () { 'use strict';
 
   /**
    * Detect IE browser
@@ -21,6 +19,7 @@
   var defaultConfig = {
     rootMargin: '0px',
     threshold: 0,
+    watchExit: false,
     load: function load(element) {
       if (element.nodeName.toLowerCase() === 'picture') {
         var img = document.createElement('img');
@@ -39,10 +38,10 @@
         if (element.children) {
           var childs = element.children;
           var childSrc = void 0;
-          for (var i = 0; i <= childs.length - 1; i++) {
-            childSrc = childs[i].getAttribute('data-src');
+          for (var _i = 0; _i <= childs.length - 1; _i++) {
+            childSrc = childs[_i].getAttribute('data-src');
             if (childSrc) {
-              childs[i].src = childSrc;
+              childs[_i].src = childSrc;
             }
           }
 
@@ -66,7 +65,8 @@
         element.classList.toggle(element.getAttribute('data-toggle-class'));
       }
     },
-    loaded: function loaded() {}
+    loaded: function loaded() {},
+    exit: function exit() {}
   };
 
   function markAsLoaded(element) {
@@ -77,17 +77,23 @@
     return element.getAttribute('data-loaded') === 'true';
   };
 
-  var onIntersection = function onIntersection(load, loaded) {
+  var onIntersection = function onIntersection(load, loaded, exit, watchExit) {
     return function (entries, observer) {
       entries.forEach(function (entry) {
-        if (entry.intersectionRatio > 0 || entry.isIntersecting) {
-          observer.unobserve(entry.target);
+        if (entry.isIntersecting || entry.intersectionRatio > 0) {
+          if (!watchExit) {
+            observer.unobserve(entry.target);
+          }
 
           if (!isLoaded(entry.target)) {
             load(entry.target);
-            markAsLoaded(entry.target);
             loaded(entry.target);
+            if (!watchExit) {
+              markAsLoaded(entry.target);
+            }
           }
+        } else if (watchExit) {
+          exit(entry.target);
         }
       });
     };
@@ -111,17 +117,19 @@
     var selector = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.lozad';
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var _defaultConfig$option = _extends({}, defaultConfig, options),
-        root = _defaultConfig$option.root,
-        rootMargin = _defaultConfig$option.rootMargin,
-        threshold = _defaultConfig$option.threshold,
-        load = _defaultConfig$option.load,
-        loaded = _defaultConfig$option.loaded;
+    var _Object$assign = Object.assign({}, defaultConfig, options),
+        root = _Object$assign.root,
+        rootMargin = _Object$assign.rootMargin,
+        threshold = _Object$assign.threshold,
+        watchExit = _Object$assign.watchExit,
+        load = _Object$assign.load,
+        loaded = _Object$assign.loaded,
+        exit = _Object$assign.exit;
 
     var observer = void 0;
 
     if (typeof window !== 'undefined' && window.IntersectionObserver) {
-      observer = new IntersectionObserver(onIntersection(load, loaded), {
+      observer = new IntersectionObserver(onIntersection(load, loaded, exit, watchExit), {
         root: root,
         rootMargin: rootMargin,
         threshold: threshold
@@ -132,19 +140,21 @@
       observe: function observe() {
         var elements = getElements(selector, root);
 
-        for (var i = 0; i < elements.length; i++) {
-          if (isLoaded(elements[i])) {
+        for (var _i2 = 0; _i2 < elements.length; _i2++) {
+          if (isLoaded(elements[_i2])) {
             continue;
           }
 
           if (observer) {
-            observer.observe(elements[i]);
+            observer.observe(elements[_i2]);
             continue;
           }
 
-          load(elements[i]);
-          markAsLoaded(elements[i]);
-          loaded(elements[i]);
+          load(elements[_i2]);
+          loaded(elements[_i2]);
+          if (!watchExit) {
+            markAsLoaded(elements[_i2]);
+          }
         }
       },
       triggerLoad: function triggerLoad(element) {
@@ -153,8 +163,10 @@
         }
 
         load(element);
-        markAsLoaded(element);
         loaded(element);
+        if (!watchExit) {
+          markAsLoaded(elements[i]);
+        }
       },
 
       observer: observer
@@ -163,4 +175,4 @@
 
   return lozad;
 
-})));
+}));

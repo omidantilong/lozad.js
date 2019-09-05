@@ -1,4 +1,4 @@
-/*! lozad.js - v1.10.0 - 2019-06-06
+/*! lozad.js - v1.10.0 - 2019-09-05
 * https://github.com/ApoorvSaxena/lozad.js
 * Copyright (c) 2019 Apoorv Saxena; Licensed MIT */
 
@@ -13,6 +13,7 @@ const isIE = typeof document !== 'undefined' && document.documentMode;
 const defaultConfig = {
   rootMargin: '0px',
   threshold: 0,
+  watchExit: false,
   load(element) {
     if (element.nodeName.toLowerCase() === 'picture') {
       const img = document.createElement('img');
@@ -58,7 +59,8 @@ const defaultConfig = {
       element.classList.toggle(element.getAttribute('data-toggle-class'));
     }
   },
-  loaded() {}
+  loaded() {},
+  exit(){}
 };
 
 function markAsLoaded(element) {
@@ -67,16 +69,21 @@ function markAsLoaded(element) {
 
 const isLoaded = element => element.getAttribute('data-loaded') === 'true';
 
-const onIntersection = (load, loaded) => (entries, observer) => {
+const onIntersection = (load, loaded, exit, watchExit) => (entries, observer) => {
   entries.forEach(entry => {
-    if (entry.intersectionRatio > 0 || entry.isIntersecting) {
-      observer.unobserve(entry.target);
+    if (entry.isIntersecting || entry.intersectionRatio > 0) {
+      if(!watchExit) {
+        observer.unobserve(entry.target);
+      }
 
       if (!isLoaded(entry.target)) {
         load(entry.target);
-        markAsLoaded(entry.target);
         loaded(entry.target);
+        if(!watchExit) { markAsLoaded(entry.target); }
+
       }
+    } else if(watchExit) {
+      exit(entry.target);
     }
   });
 };
@@ -94,11 +101,11 @@ const getElements = (selector, root = document) => {
 };
 
 function lozad (selector = '.lozad', options = {}) {
-  const {root, rootMargin, threshold, load, loaded} = {...defaultConfig, ...options};
+  const {root, rootMargin, threshold, watchExit, load, loaded, exit} = Object.assign({}, defaultConfig, options);
   let observer;
 
   if (typeof window !== 'undefined' && window.IntersectionObserver) {
-    observer = new IntersectionObserver(onIntersection(load, loaded), {
+    observer = new IntersectionObserver(onIntersection(load, loaded, exit, watchExit), {
       root,
       rootMargin,
       threshold
@@ -120,8 +127,10 @@ function lozad (selector = '.lozad', options = {}) {
         }
 
         load(elements[i]);
-        markAsLoaded(elements[i]);
         loaded(elements[i]);
+        if(!watchExit) {
+          markAsLoaded(elements[i]);
+        }
       }
     },
     triggerLoad(element) {
@@ -130,8 +139,10 @@ function lozad (selector = '.lozad', options = {}) {
       }
 
       load(element);
-      markAsLoaded(element);
       loaded(element);
+      if(!watchExit) {
+        markAsLoaded(elements[i]);
+      }
     },
     observer
   }

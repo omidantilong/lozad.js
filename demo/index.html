@@ -225,11 +225,16 @@ picture-09.jpg media="(min-width: 320px)"
     // Initialize library to lazy load images
     var observer = lozad('.lozad', {
         threshold: 0.1,
+        watchExit: true,
         load: function(el) {
             el.src = el.getAttribute("data-src");
             el.onload = function() {
                 toastr["success"](el.localName.toUpperCase() + " " + el.getAttribute("data-index") + " lazy loaded.")
             }
+        },
+        exit: function(el) {
+            console.log('exiting')
+            console.log(el)
         }
     })
 
