@@ -136,7 +136,7 @@ export default function (selector = '.lozad', options = {}) {
       load(element)
       loaded(element)
       if(!watchExit) {
-        markAsLoaded(elements[i])
+        markAsLoaded(element)
       }
     },
     observer

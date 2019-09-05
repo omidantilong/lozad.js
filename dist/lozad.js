@@ -38,10 +38,10 @@
         if (element.children) {
           var childs = element.children;
           var childSrc = void 0;
-          for (var _i = 0; _i <= childs.length - 1; _i++) {
-            childSrc = childs[_i].getAttribute('data-src');
+          for (var i = 0; i <= childs.length - 1; i++) {
+            childSrc = childs[i].getAttribute('data-src');
             if (childSrc) {
-              childs[_i].src = childSrc;
+              childs[i].src = childSrc;
             }
           }
 
@@ -140,20 +140,20 @@
       observe: function observe() {
         var elements = getElements(selector, root);
 
-        for (var _i2 = 0; _i2 < elements.length; _i2++) {
-          if (isLoaded(elements[_i2])) {
+        for (var i = 0; i < elements.length; i++) {
+          if (isLoaded(elements[i])) {
             continue;
           }
 
           if (observer) {
-            observer.observe(elements[_i2]);
+            observer.observe(elements[i]);
             continue;
           }
 
-          load(elements[_i2]);
-          loaded(elements[_i2]);
+          load(elements[i]);
+          loaded(elements[i]);
           if (!watchExit) {
-            markAsLoaded(elements[_i2]);
+            markAsLoaded(elements[i]);
           }
         }
       },
@@ -165,7 +165,7 @@
         load(element);
         loaded(element);
         if (!watchExit) {
-          markAsLoaded(elements[i]);
+          markAsLoaded(element);
         }
       },
 
